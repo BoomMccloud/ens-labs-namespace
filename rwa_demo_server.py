@@ -9,7 +9,7 @@ import os
 import re
 import time
 from http import HTTPStatus
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, quote, urlparse
@@ -424,38 +424,44 @@ def lookup_crypto(query: str) -> dict:
     return _store(cache_key, value)
 
 
+def _write_json(request_handler: BaseHTTPRequestHandler, status: HTTPStatus, payload: dict) -> None:
+    body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    request_handler.send_response(status)
+    request_handler.send_header("Content-Type", "application/json; charset=utf-8")
+    request_handler.send_header("Cache-Control", "no-store")
+    request_handler.send_header("Content-Length", str(len(body)))
+    request_handler.end_headers()
+    request_handler.wfile.write(body)
+
+
+def handle_api_get(request_handler: BaseHTTPRequestHandler, endpoint: str) -> None:
+    parsed = urlparse(request_handler.path)
+    params = parse_qs(parsed.query)
+    asset_type = params.get("type", [""])[0].strip().lower()
+    query = params.get("q", [""])[0].strip()
+    if endpoint not in {"lookup", "search"} or asset_type not in {"stock", "crypto"} or not query or len(query) > 80:
+        return _write_json(request_handler, HTTPStatus.BAD_REQUEST, {"error": "invalid_request", "message": "Use type=stock|crypto and a short q value."})
+    try:
+        if endpoint == "search":
+            result = search_stocks(query) if asset_type == "stock" else search_crypto(query)
+        else:
+            result = lookup_stock(query) if asset_type == "stock" else lookup_crypto(query)
+        return _write_json(request_handler, HTTPStatus.OK, result)
+    except LookupError as error:
+        return _write_json(request_handler, HTTPStatus.NOT_FOUND, {"error": "not_found", "message": str(error)})
+    except (HTTPError, URLError, TimeoutError, ValueError, json.JSONDecodeError):
+        return _write_json(request_handler, HTTPStatus.BAD_GATEWAY, {"error": "provider_unavailable", "message": "Live provider unavailable. Use the demo fallback."})
+
+
 class DemoHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
-
-    def _json(self, status: HTTPStatus, payload: dict) -> None:
-        body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         if parsed.path not in {"/api/lookup", "/api/search"}:
             return super().do_GET()
-        params = parse_qs(parsed.query)
-        asset_type = params.get("type", [""])[0].strip().lower()
-        query = params.get("q", [""])[0].strip()
-        if asset_type not in {"stock", "crypto"} or not query or len(query) > 80:
-            return self._json(HTTPStatus.BAD_REQUEST, {"error": "invalid_request", "message": "Use type=stock|crypto and a short q value."})
-        try:
-            if parsed.path == "/api/search":
-                result = search_stocks(query) if asset_type == "stock" else search_crypto(query)
-            else:
-                result = lookup_stock(query) if asset_type == "stock" else lookup_crypto(query)
-            return self._json(HTTPStatus.OK, result)
-        except LookupError as error:
-            return self._json(HTTPStatus.NOT_FOUND, {"error": "not_found", "message": str(error)})
-        except (HTTPError, URLError, TimeoutError, ValueError, json.JSONDecodeError):
-            return self._json(HTTPStatus.BAD_GATEWAY, {"error": "provider_unavailable", "message": "Live provider unavailable. Use the demo fallback."})
+        return handle_api_get(self, parsed.path.rsplit("/", 1)[-1])
 
     def log_message(self, format: str, *args) -> None:
         if self.path.startswith("/api/"):

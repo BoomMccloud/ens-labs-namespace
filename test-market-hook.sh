@@ -105,9 +105,11 @@ assert {"source": "/", "destination": "/rwa-ens-identity-demo.html"} in config.g
 
 lookup = importlib.import_module("api.lookup")
 search = importlib.import_module("api.search")
-from rwa_demo_server import DemoHandler
-assert lookup.handler is DemoHandler
-assert search.handler is DemoHandler
+from http.server import BaseHTTPRequestHandler
+assert issubclass(lookup.handler, BaseHTTPRequestHandler)
+assert issubclass(search.handler, BaseHTTPRequestHandler)
+assert lookup.handler.__module__ == "api.lookup"
+assert search.handler.__module__ == "api.search"
 '
 
 stock_json="$(curl -fsS "${base_url}/api/lookup?type=stock&q=MSFT")"

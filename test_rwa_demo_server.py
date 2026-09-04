@@ -1,4 +1,6 @@
 import unittest
+from http.server import BaseHTTPRequestHandler
+from importlib import import_module
 from unittest.mock import patch
 
 import rwa_demo_server as server
@@ -132,6 +134,14 @@ class CryptoCatalogTests(unittest.TestCase):
         self.assertEqual(2, len(results))
         self.assertEqual("0xabc", results[0]["address"])
         self.assertTrue(all(result["verified"] is False for result in results))
+
+
+class VercelEntrypointTests(unittest.TestCase):
+    def test_each_endpoint_defines_its_own_http_handler(self):
+        for module_name in ("api.lookup", "api.search"):
+            endpoint = import_module(module_name)
+            self.assertTrue(issubclass(endpoint.handler, BaseHTTPRequestHandler))
+            self.assertEqual(module_name, endpoint.handler.__module__)
 
 
 if __name__ == "__main__":

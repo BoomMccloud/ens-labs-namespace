@@ -8,7 +8,7 @@ The deployment serves the presentation at `/` and exposes the existing same-orig
 
 Set `SEC_USER_AGENT` in the Vercel project environment to a descriptive application name and monitored contact address before sharing the deployment publicly.
 
-Keep the Vercel API entry points as thin aliases to `rwa_demo_server.DemoHandler`. Do not duplicate market-provider or routing logic inside `api/`.
+Keep the Vercel API entry points as thin `BaseHTTPRequestHandler` classes that delegate to `rwa_demo_server.handle_api_get`. Do not duplicate market-provider or routing logic inside `api/`.
 
 **Why:** The 2026-09-04 Vercel packaging change preserved one implementation for local and hosted API behavior.
 
