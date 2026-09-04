@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A concise interactive demo of ENS as an identity layer for tokenized assets.">
+<title>Crypto markets with ENS: One asset. One ENS name. | ENS</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --blue: #1469e8;
+    --blue-soft: #eaf2ff;
+    --green: #24a148;
+    --red: #ff3b30;
+    --line: rgba(29, 29, 31, .1);
+    --glass: rgba(255, 255, 255, .76);
+    --display: "SF Pro Display", "Avenir Next", "Helvetica Neue", sans-serif;
+    --text: "SF Pro Text", "Avenir Next", "Helvetica Neue", sans-serif;
+    --mono: "SFMono-Regular", Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 100%; min-height: 100%; }
+  body { overflow: hidden; color: var(--ink); background: var(--bg); font-family: var(--text); -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; }
+  button { color: inherit; }
+  button:focus-visible, input:focus-visible { outline: 3px solid rgba(20, 105, 232, .42); outline-offset: 3px; }
+
+  .top {
+    position: fixed; inset: 0 0 auto; z-index: 20; height: 68px; padding: 0 34px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(245, 245, 247, .72); border-bottom: 1px solid rgba(0,0,0,.04);
+    backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
+  .ens-mark { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 9px; color: white; background: linear-gradient(145deg, #69a7ff, #1469e8); box-shadow: 0 6px 18px rgba(20,105,232,.23); font-weight: 800; }
+  .live-label { color: var(--muted); font-size: 14px; font-weight: 600; letter-spacing: .01em; }
+  .dots { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 99px; background: #c7c7cc; cursor: pointer; transition: width .4s cubic-bezier(.16,1,.3,1), background .25s; }
+  .dot.active { width: 26px; background: var(--blue); }
+  .dot:disabled { cursor: default; }
+
+  .deck { position: relative; width: 100vw; height: 100svh; }
+  .scene {
+    position: absolute; inset: 68px 0 74px; display: none; overflow: auto;
+    padding: clamp(30px, 5vw, 76px) clamp(24px, 6vw, 96px);
+  }
+  .scene.active { display: grid; place-items: center; }
+  .scene.active .copy { animation: copy-in .7s cubic-bezier(.16,1,.3,1) both; }
+  .scene.active .visual { animation: visual-in .85s .08s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes copy-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  @keyframes visual-in { from { opacity: 0; transform: translateY(26px) scale(.975); } to { opacity: 1; transform: none; } }
+  .stage { width: min(1240px, 100%); display: grid; grid-template-columns: minmax(280px, .78fr) minmax(480px, 1.22fr); gap: clamp(48px, 8vw, 120px); align-items: center; }
+  .copy { position: relative; z-index: 2; }
+  .eyebrow { margin-bottom: 17px; color: var(--blue); font-size: 15px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+  h1 { margin: 0; max-width: 680px; font: 650 clamp(58px, 7.3vw, 108px)/.88 var(--display); letter-spacing: -.072em; }
+  .sub { margin: 26px 0 0; max-width: 480px; color: var(--muted); font-size: clamp(18px, 1.65vw, 24px); font-weight: 450; line-height: 1.25; letter-spacing: -.025em; }
+  .blue { color: var(--blue); }
+
+  .visual { position: relative; min-width: 0; }
+  .device { overflow: hidden; border: 1px solid rgba(0,0,0,.08); border-radius: 34px; background: rgba(255,255,255,.92); box-shadow: 0 34px 90px rgba(0,0,0,.13), 0 2px 8px rgba(0,0,0,.05); }
+  .device-bar { height: 58px; padding: 0 22px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; color: #515154; font-size: 16px; font-weight: 650; }
+  .device-body { padding: clamp(22px, 3.2vw, 42px); }
+  .search { height: 58px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-radius: 16px; background: #f1f1f3; }
+  .search svg { width: 18px; color: #8e8e93; flex: 0 0 auto; }
+  .search input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 18px; font-weight: 600; letter-spacing: -.02em; }
+  .search button { border: 0; color: var(--blue); background: transparent; font-size: 16px; font-weight: 650; cursor: pointer; }
+  .pill { padding: 7px 11px; border-radius: 99px; color: #147a35; background: #e9f7ed; font-size: 14px; font-weight: 700; }
+
+  .catalog-head { margin: 20px 2px 11px; display: flex; align-items: center; justify-content: space-between; color: #515154; font-size: 14px; font-weight: 650; letter-spacing: .01em; }
+  .catalog-head strong { color: var(--ink); font-size: 18px; letter-spacing: -.015em; }
+  .stock-dropdown { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: white; box-shadow: 0 16px 38px rgba(0,0,0,.08); transition: opacity .18s; }
+  .stock-dropdown.loading { opacity: .55; }
+  .stock-match { width: 100%; min-height: 68px; padding: 11px 14px; display: grid; grid-template-columns: 40px minmax(0,1fr); gap: 13px; align-items: center; border: 0; border-bottom: 1px solid #e5e5e7; background: white; text-align: left; cursor: pointer; }
+  .stock-match:last-child { border-bottom: 0; }
+  .stock-match:hover { background: #f8f8fa; }
+  .stock-match.exact { position: relative; z-index: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .stock-mark { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; color: white; background: #1d1d1f; font-size: 17px; font-weight: 750; }
+  .stock-match.exact .stock-mark { background: var(--blue); }
+  .stock-copy { min-width: 0; }
+  .stock-copy strong { display: block; overflow: hidden; color: var(--ink); font-size: 18px; font-weight: 650; letter-spacing: -.02em; text-overflow: ellipsis; white-space: nowrap; }
+  .stock-copy small { display: block; margin-top: 4px; overflow: hidden; color: #515154; font-size: 14px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+  .stock-dropdown.ambiguous .stock-match.exact { background: white; box-shadow: none; }
+  .stock-dropdown.ambiguous .stock-match.exact .stock-mark { background: #1d1d1f; }
+  .quick-picks { margin-top: 12px; display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; }
+  .quick-picks::-webkit-scrollbar { display: none; }
+  .quick-picks button { flex: 0 0 auto; padding: 9px 13px; border: 1px solid var(--line); border-radius: 99px; color: #515154; background: white; font-size: 14px; font-weight: 650; cursor: pointer; transition: .18s ease; }
+  .quick-picks button:hover, .quick-picks button.active { color: var(--blue); border-color: rgba(20,105,232,.3); background: var(--blue-soft); }
+  .empty-catalog { padding: 26px; color: #515154; font-size: 16px; text-align: center; }
+  .empty-catalog.provider-error { color: #9a6700; background: #fff8e6; }
+  .resolve-line { margin: 16px 2px 0; display: flex; justify-content: space-between; color: #515154; font-size: 15px; font-weight: 600; }
+  .resolve-line b { color: var(--green); }
+
+  .dark { color: white; background: #000; }
+  .dark .sub { color: #a1a1a6; }
+  .dark .top-spacer { position: absolute; inset: 0; background: radial-gradient(circle at 72% 46%, rgba(20,105,232,.16), transparent 32%); pointer-events: none; }
+  .dark-device { border-color: #27272a; background: #111113; box-shadow: 0 38px 100px rgba(20,105,232,.13); }
+  .dark-device .device-bar { border-color: #2a2a2d; color: #8e8e93; }
+  .dark-device .search { background: #242426; }
+  .dark-device .search input { color: white; }
+  .dark-device .catalog-head { color: #8e8e93; }
+  .dark-device .catalog-head strong { color: white; }
+  .dark-device .stock-dropdown { border-color: #303033; background: #19191c; box-shadow: 0 16px 38px rgba(0,0,0,.3); }
+  .dark-device .stock-match { color: white; border-color: #303033; background: #19191c; }
+  .dark-device .stock-match:hover { background: #202024; }
+  .dark-device .stock-mark { background: #315d9c; }
+  .dark-device .stock-copy strong { color: #f5f5f7; }
+  .dark-device .stock-copy small { color: #b7b7bd; }
+  .dark-device .crypto-match { min-height: 92px; padding-block: 12px; }
+  .pair-symbols { display: flex; align-items: baseline; gap: 5px; min-width: 0; }
+  .crypto-copy .pair-symbols strong { display: inline; flex: 0 1 auto; font-size: 18px; }
+  .pair-symbols span { color: #b7b7bd; font-size: 15px; font-weight: 650; }
+  .crypto-copy .pair-names { margin-top: 4px; color: #e5e5ea; font-size: 14px; }
+  .crypto-copy .pair-addresses { margin-top: 6px; color: #b7b7bd; font: 14px/1.25 var(--mono); letter-spacing: -.025em; }
+  .dark-device .stock-dropdown.ambiguous .stock-match.exact { background: #19191c; }
+  .dark-device .stock-dropdown.ambiguous .stock-match.exact .stock-mark { background: #315d9c; }
+  .dark-device .resolve-line { color: #a1a1a6; }
+  .dark-device .resolve-line b { color: #ff6961; }
+  .dark-device .quick-picks button { color: #a1a1a6; border-color: #303033; background: #19191c; }
+  .dark-device .quick-picks button:hover, .dark-device .quick-picks button.active { color: white; border-color: #315d9c; background: #17253a; }
+
+  .name-scene { background: radial-gradient(circle at 75% 42%, #dcecff 0, transparent 37%), var(--bg); }
+  .resolver { border-color: rgba(20,105,232,.12); }
+  .chain-head { margin: 25px 0 14px; display: flex; align-items: center; justify-content: space-between; }
+  .chain-head strong { font-size: 22px; letter-spacing: -.04em; }
+  .chain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .chain { padding: 15px; border: 1px solid var(--line); border-radius: 14px; background: white; text-align: left; cursor: pointer; transition: .22s cubic-bezier(.16,1,.3,1); }
+  .chain:hover { transform: translateY(-2px); }
+  .chain.selected { border-color: var(--blue); background: var(--blue-soft); box-shadow: inset 0 0 0 1px var(--blue); }
+  .chain span { display: flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 650; }
+  .chain i { width: 8px; height: 8px; border-radius: 50%; background: var(--chain); }
+  .chain code { display: block; margin-top: 8px; color: #515154; font: 14px/1.2 var(--mono); }
+  .verified-badge { width: 25px; height: 25px; position: relative; display: grid; place-items: center; flex: 0 0 auto; color: white; background: var(--blue); border: 2px solid white; border-radius: 50%; box-shadow: 0 0 0 1px rgba(20,105,232,.16), 0 5px 12px rgba(20,105,232,.22); font-size: 14px; font-weight: 850; line-height: 1; }
+  .attestation-summary { margin-top: 14px; padding: 15px 17px; display: flex; align-items: flex-start; gap: 12px; border: 1px solid rgba(20,105,232,.12); border-radius: 16px; background: #f2f7ff; }
+  .attestation-summary-copy { min-width: 0; }
+  .attestation-summary-copy strong { display: block; font-size: 16px; letter-spacing: -.02em; }
+  .attestation-summary-copy a { margin-top: 6px; display: inline-block; color: var(--blue); font-size: 15px; font-weight: 700; text-decoration: none; }
+  .attestation-summary-copy a:hover { text-decoration: underline; }
+
+  .namespace-scene { background: radial-gradient(circle at 73% 45%, #e3efff 0, transparent 38%), var(--bg); }
+  .namespace-flow { padding: 28px; border: 1px solid rgba(0,0,0,.07); border-radius: 30px; background: rgba(255,255,255,.9); box-shadow: 0 30px 78px rgba(0,0,0,.11); }
+  .namespace-node { min-height: 104px; padding: 19px; display: grid; grid-template-columns: 54px minmax(0,1fr); gap: 16px; align-items: center; border: 1px solid rgba(29,29,31,.08); border-radius: 19px; background: white; }
+  .namespace-icon { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 17px; color: white; background: var(--node); font-size: 18px; font-weight: 800; box-shadow: 0 10px 22px color-mix(in srgb, var(--node) 24%, transparent); }
+  .namespace-copy { min-width: 0; }
+  .namespace-type { display: block; color: var(--node); font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .namespace-copy strong { display: block; margin-top: 4px; font-size: 23px; letter-spacing: -.025em; }
+  .namespace-copy code { display: block; margin-top: 7px; color: #515154; font: 14px/1.4 var(--mono); overflow-wrap: anywhere; }
+  .account-node { min-height: 168px; }
+  .stealth-visual { margin-top: 14px; padding: 12px 14px; display: grid; grid-template-columns: 78px minmax(0,1fr); gap: 13px; align-items: center; border: 1px solid rgba(36,161,72,.16); border-radius: 15px; background: linear-gradient(135deg, #f0fbf3, #e6f7eb); }
+  .stealth-addresses { height: 42px; position: relative; }
+  .stealth-addresses i { width: 34px; height: 34px; position: absolute; top: 4px; display: grid; place-items: center; border: 2px solid white; border-radius: 10px; color: white; background: #24a148; box-shadow: 0 7px 15px rgba(36,161,72,.2); font: 700 10px var(--mono); }
+  .stealth-addresses i::after { content: "0x"; }
+  .stealth-addresses i:nth-child(1) { left: 0; transform: rotate(-8deg); opacity: .58; }
+  .stealth-addresses i:nth-child(2) { left: 20px; transform: rotate(3deg); opacity: .78; }
+  .stealth-addresses i:nth-child(3) { left: 40px; transform: rotate(8deg); }
+  .stealth-copy strong { display: block; color: #147a35; font-size: 17px; letter-spacing: -.015em; }
+  .stealth-copy span { display: block; margin-top: 3px; color: #397a4b; font-size: 15px; font-weight: 600; }
+  .namespace-relation { height: 48px; margin-left: 26px; display: flex; align-items: center; gap: 12px; color: #515154; font-size: 16px; font-weight: 750; }
+  .namespace-relation::before { content: "↓"; width: 2px; height: 31px; display: flex; align-items: flex-end; justify-content: center; color: var(--blue); background: #c8dcfa; font-size: 15px; }
+  .namespace-relation span { padding: 5px 9px; border-radius: 99px; background: #eef4fd; }
+  .namespace-heading { font-size: clamp(48px, 5.5vw, 78px); line-height: .94; }
+  .namespace-tree { padding: 28px; border: 1px solid rgba(0,0,0,.07); border-radius: 30px; background: rgba(255,255,255,.92); box-shadow: 0 30px 78px rgba(0,0,0,.11); }
+  .tree-level { min-height: 96px; padding: 17px 19px; display: grid; grid-template-columns: 1fr; gap: 7px; align-items: center; border: 1px solid rgba(29,29,31,.08); border-radius: 18px; background: white; }
+  .tree-level span { color: var(--blue); font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .tree-level code { color: var(--ink); font: 650 15px/1.4 var(--mono); overflow-wrap: anywhere; }
+  .tree-arrow { height: 26px; margin-left: 20px; display: flex; align-items: center; color: var(--blue); font-size: 18px; font-weight: 800; }
+  .tree-arrow::before { content: "↓"; }
+  .tree-note { margin: 18px 2px 0; display: flex; align-items: center; gap: 11px; color: #3a3a3c; font-size: 16px; font-weight: 650; }
+  .tree-note::before { content: "←"; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--blue); }
+  .namespace-menu { padding: 24px; display: grid; gap: 10px; border: 1px solid rgba(0,0,0,.07); border-radius: 30px; background: rgba(255,255,255,.92); box-shadow: 0 30px 78px rgba(0,0,0,.11); }
+  .menu-step { --depth: 0px; min-height: 84px; margin-left: var(--depth); padding: 14px 16px; display: grid; grid-template-columns: 44px minmax(0,1fr); gap: 13px; align-items: center; border: 1px solid rgba(29,29,31,.08); border-radius: 17px; background: white; box-shadow: 0 8px 22px rgba(0,0,0,.04); }
+  .menu-step:nth-child(2) { --depth: 16px; }
+  .menu-step:nth-child(3) { --depth: 32px; }
+  .menu-step:nth-child(4) { --depth: 48px; border-color: rgba(20,105,232,.24); background: var(--blue-soft); box-shadow: 0 10px 26px rgba(20,105,232,.1); }
+  .menu-label { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px; color: white; background: #1d1d1f; font-size: 14px; font-weight: 800; }
+  .menu-step:nth-child(2) .menu-label { background: var(--blue); }
+  .menu-step:nth-child(3) .menu-label { color: var(--blue); background: #dce9ff; }
+  .menu-step:nth-child(4) .menu-label { color: white; background: var(--blue); }
+  .menu-copy { min-width: 0; }
+  .menu-copy strong { display: inline; font-size: 18px; letter-spacing: -.02em; }
+  .menu-copy span { margin-left: 8px; color: #515154; font-size: 14px; font-weight: 600; }
+  .menu-copy code { display: block; margin-top: 5px; color: #515154; font: 14px/1.35 var(--mono); overflow-wrap: anywhere; }
+  .safety-comparison { padding: 24px; border: 1px solid rgba(0,0,0,.07); border-radius: 30px; background: rgba(255,255,255,.92); box-shadow: 0 30px 78px rgba(0,0,0,.11); }
+  .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .comparison-card { min-width: 0; padding: 19px; border-radius: 20px; background: #f1f1f3; }
+  .comparison-card.trusted { color: white; background: var(--blue); box-shadow: 0 16px 36px rgba(20,105,232,.22); }
+  .comparison-label { display: block; margin-bottom: 15px; color: #515154; font-size: 14px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+  .trusted .comparison-label { color: #dce9ff; }
+  .comparison-card code { min-height: 52px; display: block; color: var(--ink); font: 700 14px/1.4 var(--mono); overflow-wrap: anywhere; }
+  .trusted code { color: white; }
+  .comparison-card ul { margin: 15px 0 0; padding: 0; display: grid; gap: 9px; list-style: none; }
+  .comparison-card li { color: #3a3a3c; font-size: 15px; font-weight: 650; }
+  .comparison-card li::before { content: "?"; width: 18px; display: inline-block; color: #8e8e93; font-weight: 800; }
+  .comparison-card.trusted li { color: white; }
+  .comparison-card.trusted li::before { content: "✓"; color: white; }
+
+  .checkout { padding: clamp(28px, 4vw, 48px); }
+  .asset-row { display: flex; align-items: center; gap: 15px; }
+  .asset-icon { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 17px; color: white; background: linear-gradient(145deg, #4f91f2, #1469e8); font-weight: 750; }
+  .asset-row strong { display: block; font-size: 20px; }
+  .asset-row span { color: #147a35; font-size: 14px; font-weight: 650; }
+  .verification-card { margin-top: 24px; padding: 16px; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 1px solid rgba(36,161,72,.2); border-radius: 18px; background: linear-gradient(135deg, #f0fbf3, #e6f7eb); box-shadow: 0 12px 28px rgba(36,161,72,.09); }
+  .verification-seal { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--green); font-size: 20px; font-weight: 800; box-shadow: 0 8px 18px rgba(36,161,72,.24); }
+  .verification-copy { min-width: 0; }
+  .verification-copy small { display: block; color: #397a4b; font-size: 14px; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
+  .verification-copy strong { display: block; margin-top: 4px; font-size: 17px; letter-spacing: -.02em; }
+  .verification-copy span { display: block; margin-top: 4px; color: #397a4b; font-size: 15px; font-weight: 600; }
+  .verification-card a { padding: 10px 12px; border-radius: 10px; color: #147a35; background: rgba(255,255,255,.72); font-size: 14px; font-weight: 750; text-decoration: none; white-space: nowrap; transition: background .18s, transform .18s; }
+  .verification-card a:hover { background: white; transform: translateY(-1px); }
+  .order-amount { margin: 28px 0 12px; display: flex; align-items: baseline; justify-content: space-between; }
+  .order-amount input { width: 68%; padding: 0; border: 0; outline: 0; background: transparent; font: 650 clamp(48px, 6vw, 76px)/1 var(--display); letter-spacing: -.06em; }
+  .order-amount b { color: var(--muted); font-size: 16px; }
+  .order-details { margin: 26px 0; display: grid; gap: 13px; }
+  .order-details div { display: flex; justify-content: space-between; color: #515154; font-size: 15px; }
+  .order-details b { color: var(--ink); }
+  .buy { width: 100%; min-height: 58px; border: 0; border-radius: 16px; color: white; background: var(--blue); font-size: 17px; font-weight: 650; cursor: pointer; box-shadow: 0 13px 32px rgba(20,105,232,.23); transition: transform .18s, box-shadow .18s; }
+  .buy:hover { transform: translateY(-2px); box-shadow: 0 17px 38px rgba(20,105,232,.28); }
+  .fine { margin: 14px 0 0; color: #515154; font-size: 14px; text-align: center; }
+  .success { display: none; min-height: 430px; padding: 34px 42px 38px; place-items: center; text-align: center; }
+  .success.show { display: grid; animation: visual-in .55s both; }
+  .checkout.hide { display: none; }
+  .success-receipt { width: 100%; }
+  .check { width: 62px; height: 62px; margin: 0 auto 15px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--green); font-size: 28px; box-shadow: 0 16px 34px rgba(36,161,72,.22); }
+  .success-kicker { color: #147a35; font-size: 14px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
+  .success h2 { margin: 7px 0 0; font-size: 42px; letter-spacing: -.055em; }
+  .success-name { margin: 5px 0 22px; color: var(--blue); font-size: 16px; font-weight: 650; overflow-wrap: anywhere; }
+  .success-route { padding: 14px 16px; display: grid; gap: 10px; border-radius: 15px; background: #f5f5f7; text-align: left; }
+  .success-route div { display: flex; justify-content: space-between; gap: 18px; color: #515154; font-size: 15px; }
+  .success-route b { color: var(--ink); }
+  .success-checks { margin: 18px 0 20px; padding: 0; display: grid; gap: 8px; list-style: none; text-align: left; }
+  .success-checks li { display: flex; align-items: center; gap: 9px; color: #3a3a3c; font-size: 15px; font-weight: 650; }
+  .success-checks li::before { content: "✓"; width: 20px; height: 20px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--green); font-size: 11px; }
+
+  .controls { position: fixed; z-index: 20; inset: auto 0 0; height: 74px; padding: 0 34px; display: flex; align-items: center; justify-content: center; background: rgba(245,245,247,.78); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .control-pill { height: 44px; padding: 0 7px; display: flex; align-items: center; gap: 4px; border: 1px solid rgba(0,0,0,.08); border-radius: 99px; background: rgba(255,255,255,.86); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+  .nav { width: 34px; height: 34px; border: 0; border-radius: 50%; background: transparent; font-size: 18px; cursor: pointer; }
+  .nav:hover { background: #ededf0; }
+  .nav:disabled { opacity: .2; cursor: default; }
+  .counter { min-width: 64px; color: #515154; font-size: 14px; font-weight: 650; text-align: center; }
+  .hint { position: absolute; right: 34px; color: #515154; font-size: 14px; }
+
+  @media (max-width: 900px) {
+    .scene { padding: 35px 26px; }
+    .stage { grid-template-columns: 1fr; gap: 36px; }
+    h1 { max-width: 720px; font-size: clamp(50px, 10vw, 76px); }
+    .sub { margin-top: 18px; }
+    .visual { width: min(650px, 100%); margin: 0 auto; }
+  }
+  @media (max-width: 600px) {
+    .top { height: 58px; padding: 0 18px; }
+    .live-label { width: 58px; font-size: 0; text-align: right; }
+    .live-label::after { content: "Sample data"; font-size: 14px; }
+    .scene { inset: 58px 0 64px; padding: 28px 18px 38px; }
+    .stage { gap: 25px; align-content: start; }
+    .eyebrow { margin-bottom: 11px; font-size: 14px; }
+    h1 { font-size: 46px; }
+    .sub { margin-top: 13px; font-size: 17px; }
+    .device { border-radius: 24px; }
+    .device-bar { height: 43px; padding: 0 16px; }
+    .device-body { padding: 17px; }
+    .search { height: 50px; }
+    .stock-match { min-height: 62px; }
+    .chain-grid { grid-template-columns: repeat(2, 1fr); }
+    .namespace-flow { padding: 17px; border-radius: 24px; }
+    .namespace-tree, .namespace-menu, .safety-comparison { padding: 17px; border-radius: 24px; }
+    .menu-step, .menu-step:nth-child(n) { --depth: 0px; }
+    .tree-level { grid-template-columns: 1fr; padding: 14px; }
+    .tree-level code { font-size: 14px; }
+    .comparison-grid { grid-template-columns: 1fr; }
+    .namespace-node { min-height: 96px; padding: 15px; }
+    .account-node { min-height: 158px; }
+    .namespace-copy code { font-size: 14px; }
+    .stealth-visual { grid-template-columns: 72px minmax(0,1fr); padding: 11px 12px; }
+    .checkout { padding: 22px; }
+    .verification-card { grid-template-columns: 42px minmax(0, 1fr); }
+    .verification-card a { grid-column: 2; justify-self: start; }
+    .order-amount { margin-top: 28px; }
+    .order-amount input { font-size: 51px; }
+    .controls { height: 64px; padding: 0 18px; }
+    .hint { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="ens-mark">Ξ</span><span>ENS</span></div>
+  <nav class="dots" aria-label="Demo steps">
+    <button class="dot active" data-step="0" aria-label="Step 1"></button>
+    <button class="dot" data-step="1" aria-label="Step 2" disabled></button>
+    <button class="dot" data-step="2" aria-label="Step 3" disabled></button>
+    <button class="dot" data-step="3" aria-label="Step 4" disabled></button>
+    <button class="dot" data-step="4" aria-label="Step 5" disabled></button>
+    <button class="dot" data-step="5" aria-label="Step 6" disabled></button>
+    <button class="dot" data-step="6" aria-label="Step 7" disabled></button>
+    <button class="dot" data-step="7" aria-label="Step 8" disabled></button>
+  </nav>
+  <span class="live-label">Concept demo · illustrative data</span>
+</header>
+
+<main class="deck">
+  <section class="scene active" data-scene="0" aria-labelledby="title-0">
+    <div class="stage">
+      <div class="copy"><div class="eyebrow">01 · Traditional markets</div><h1 id="title-0">One ticker.<br><span class="blue">One company.</span></h1><p class="sub">Listed tickers are unique.</p></div>
+      <div class="visual device">
+        <div class="device-bar"><span>Stocks</span><span class="pill">Market open</span></div>
+        <div class="device-body">
+          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="nvdaInput" value="C" aria-label="Search stocks" autocomplete="off"><button id="nvdaSearch">Search</button></div>
+          <div class="quick-picks" id="quickPicks" aria-label="Popular stocks"></div>
+          <div class="catalog-head"><strong id="stockMatchCount">Searching…</strong><span>SEC listed equities</span></div>
+          <div class="stock-dropdown" id="stockMatches" aria-live="polite"></div>
+          <div class="resolve-line" id="stockIdentity"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene dark" data-scene="1" aria-labelledby="title-1">
+    <div class="top-spacer"></div>
+    <div class="stage">
+      <div class="copy"><div class="eyebrow">02 · Crypto markets</div><h1 id="title-1">One ticker.<br><span class="blue">Many tokens.</span></h1><p class="sub">Token tickers are not unique.</p></div>
+      <div class="visual device dark-device">
+        <div class="device-bar"><span>All tokens</span><span>All chains</span></div>
+        <div class="device-body">
+          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="bonerInput" value="BONER" aria-label="Search tokens" autocomplete="off"><button id="bonerSearch">Search</button></div>
+          <div class="quick-picks" id="cryptoPicks" aria-label="Popular crypto assets"></div>
+          <div class="catalog-head"><strong id="cryptoMatchCount">Searching…</strong><span>Contract discovery</span></div>
+          <div class="stock-dropdown" id="contractList" aria-live="polite"></div>
+          <div class="resolve-line" id="cryptoIdentity"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene name-scene" data-scene="2" aria-labelledby="title-2">
+    <div class="stage">
+      <div class="copy"><div class="eyebrow">03 · Crypto markets with ENS</div><h1 id="title-2">One asset.<br><span class="blue">One ENS name.</span></h1><p class="sub">ENS names are unique and issuer-controlled.</p></div>
+      <div class="visual device resolver">
+        <div class="device-bar"><span>ENS asset profile</span></div>
+        <div class="device-body">
+          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="ensInput" value="benji.assets.franklintempleton.eth" aria-label="Search ENS name"><button id="ensSearch">Resolve</button></div>
+          <div id="resolution"><div class="chain-head"><strong>6 deployments</strong></div><div class="chain-grid" id="chainGrid"></div>
+          <div class="attestation-summary" aria-label="Attestation valid"><span class="verified-badge" aria-hidden="true">✓</span><div class="attestation-summary-copy"><strong>Attestation valid*</strong><a href="https://easscan.org/" target="_blank" rel="noopener noreferrer" aria-label="View attestation proof on EASscan, opens in a new tab">View proof ↗</a></div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" data-scene="3" aria-labelledby="title-3">
+    <div class="stage">
+      <div class="copy"><div class="eyebrow">04 · Buying with ENS</div><h1 id="title-3">Same name.<br><span class="blue">Buy anywhere.</span></h1><p class="sub">Use the same verified asset name wherever ENS is integrated.</p></div>
+      <div class="visual device">
+        <div class="device-bar"><span>Buy with ENS</span></div>
+        <div class="checkout" id="checkout">
+          <div class="asset-row"><div class="asset-icon">B</div><div><strong>BENJI</strong><span>benji.assets.franklintempleton.eth</span></div></div>
+          <div class="verification-card" aria-label="Attestation verification"><div class="verification-seal">✓</div><div class="verification-copy"><small>Third-party verification</small><strong>Issuer + custodian attested</strong><span>Valid through 31 Dec 2026*</span></div><a href="https://easscan.org/" target="_blank" rel="noopener noreferrer" aria-label="Verify attestation on EASscan, opens in a new tab">Verify on EASscan ↗</a></div>
+          <div class="order-amount"><input id="amountInput" type="number" value="1000" min="10" step="10" aria-label="Purchase amount"><b>USDC</b></div>
+          <div class="order-details"><div><span>Network</span><b id="receiptChain">Ethereum</b></div><div><span>Contract</span><b id="receiptContract">0x2262…A4C1</b></div><div><span>You receive</span><b id="receiveAmount">995.01 BENJI</b></div></div>
+          <button class="buy" id="buyButton">Simulate purchase</button><p class="fine">Demo only. No wallet connected. No funds moved.</p>
+        </div>
+        <div class="success" id="success">
+          <div class="success-receipt">
+            <div class="check">✓</div><div class="success-kicker">Purchase simulated</div><h2 id="successAmount">995.01 BENJI</h2><p class="success-name">benji.assets.franklintempleton.eth</p>
+            <div class="success-route"><div><span>Network</span><b id="successChain">Ethereum</b></div><div><span>Contract</span><b id="successContract">0x2262…A4C1</b></div></div>
+            <ul class="success-checks"><li>Asset identity matched</li><li>Issuer attestation valid</li><li>Correct chain contract selected</li></ul>
+            <button class="buy" id="continueButton">Continue</button><p class="fine">Demo only. No funds moved.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene namespace-scene" data-scene="4" aria-labelledby="title-4">
+    <div class="stage">
+      <div class="copy"><div class="eyebrow">05 · What is a namespace?</div><h1 class="namespace-heading" id="title-4">Names organized<br><span class="blue">under one trusted root.</span></h1><p class="sub">A namespace gives every participant and asset a unique, predictable place under <strong>franklintempleton.eth</strong>.</p></div>
+      <div class="visual namespace-tree">
+        <div class="tree-level"><span>Organization</span><code>franklintempleton.eth</code></div>
+        <div class="tree-arrow" aria-hidden="true"></div>
+        <div class="tree-level"><span>Category</span><code>assets.franklintempleton.eth</code></div>
+        <div class="tree-arrow" aria-hidden="true"></div>
+        <div class="tree-level"><span>Asset</span><code>benji.assets.franklintempleton.eth</code></div>
+        <div class="tree-note">Names become more specific as you move left.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene namespace-scene" data-scene="5" aria-labelledby="title-5">
+    <div class="stage">
+      <div class="copy"><div class="eyebrow">06 · Namespace design</div><h1 class="namespace-heading" id="title-5">A good namespace<br><span class="blue">works like a clear menu.</span></h1><p class="sub">Each level narrows the choice: assets → BENJI → policies → redemption. New facets can be added without changing the asset’s identity.</p></div>
+      <div class="visual namespace-menu" aria-label="Recursive namespace menu">
+        <div class="menu-step"><div class="menu-label">01</div><div class="menu-copy"><strong>Assets</strong><span>Category</span><code>assets.franklintempleton.eth</code></div></div>
+        <div class="menu-step"><div class="menu-label">02</div><div class="menu-copy"><strong>BENJI</strong><span>Asset identity</span><code>benji.assets.franklintempleton.eth</code></div></div>
+        <div class="menu-step"><div class="menu-label">03</div><div class="menu-copy"><strong>Policies</strong><span>Facet</span><code>policies.benji.assets.franklintempleton.eth</code></div></div>
+        <div class="menu-step"><div class="menu-label">04</div><div class="menu-copy"><strong>Redemption</strong><span>Policy</span><code>redemption.policies.benji.assets.franklintempleton.eth</code></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene namespace-scene" data-scene="6" aria-labelledby="title-6">
+    <div class="stage">
+      <div class="copy"><div class="eyebrow">07 · Connected by names</div><h1 class="namespace-heading" id="title-6">A connected namespace<br><span class="blue">works like a map.</span></h1><p class="sub">While a name identifies an entity, asset, or account, records explain how they are related.</p></div>
+      <div class="visual namespace-flow">
+        <div class="namespace-node" style="--node:#1d1d1f"><div class="namespace-icon">E</div><div class="namespace-copy"><span class="namespace-type">Entities</span><strong>FT Digital Assets</strong><code>ft-digital-assets.entities.franklintempleton.eth</code></div></div>
+        <div class="namespace-relation"><span>issues</span></div>
+        <div class="namespace-node" style="--node:#1469e8"><div class="namespace-icon">A</div><div class="namespace-copy"><span class="namespace-type">Assets</span><strong>BENJI</strong><code>benji.assets.franklintempleton.eth</code></div></div>
+        <div class="namespace-relation"><span>held by</span></div>
+        <div class="namespace-node account-node" style="--node:#24a148"><div class="namespace-icon">U</div><div class="namespace-copy"><span class="namespace-type">Accounts</span><strong>Alice's account</strong><code>alice.accounts.franklintempleton.eth</code><div class="stealth-visual"><div class="stealth-addresses" aria-hidden="true"><i></i><i></i><i></i></div><div class="stealth-copy"><strong>Stealth addresses</strong><span>Fresh address every transfer</span></div></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene namespace-scene" data-scene="7" aria-labelledby="title-7">
+    <div class="stage">
+      <div class="copy"><div class="eyebrow">08 · Why it matters</div><h1 class="namespace-heading" id="title-7">A shared namespace<br><span class="blue">makes every interaction safer.</span></h1><p class="sub">Find the right entity, asset, account, or policy. Verify the relationship. Then act.</p></div>
+      <div class="visual safety-comparison">
+        <div class="comparison-grid">
+          <div class="comparison-card"><span class="comparison-label">Without a namespace</span><code>0x2262…A4C1</code><ul><li>Which chain?</li><li>Who controls it?</li><li>Is it still valid?</li></ul></div>
+          <div class="comparison-card trusted"><span class="comparison-label">With a namespace</span><code>benji.assets.<wbr>franklintempleton.eth</code><ul><li>Contracts by chain</li><li>Issuer-controlled name</li><li>Verifiable attestations</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="controls"><div class="control-pill"><button class="nav" id="backButton" aria-label="Previous step" disabled>‹</button><span class="counter" id="counter">1 of 8</span><button class="nav" id="nextButton" aria-label="Next step">›</button></div><span class="hint">Use ← → keys</span></footer>
+
+<script>
+(() => {
+  'use strict';
+  const scenes = [...document.querySelectorAll('.scene')];
+  const dots = [...document.querySelectorAll('.dot')];
+  const contracts = [
+    {name:'Boner Coin',symbol:'BONER',chain:'Robinhood',address:'0x98096d17e191B3dA1d5f99a6D7b3584351b11E18',pairAddress:'',baseToken:{name:'Boner Coin',symbol:'BONER',address:'0x98096d17e191B3dA1d5f99a6D7b3584351b11E18'},quoteToken:{name:'Unknown quote',symbol:'?',address:''},exact:true,verified:false},
+    {name:'BONER',symbol:'BONER',chain:'Base',address:'0x4174788AF5d19A07d9b88D82a1447b0068264eE2',pairAddress:'',baseToken:{name:'BONER',symbol:'BONER',address:'0x4174788AF5d19A07d9b88D82a1447b0068264eE2'},quoteToken:{name:'Unknown quote',symbol:'?',address:''},exact:true,verified:false},
+    {name:'Boner',symbol:'BONER',chain:'Arbitrum',address:'0xF9CA0EC182a94f6231Df9b14BD147eF7Fb9FA17C',pairAddress:'',baseToken:{name:'Boner',symbol:'BONER',address:'0xF9CA0EC182a94f6231Df9b14BD147eF7Fb9FA17C'},quoteToken:{name:'Unknown quote',symbol:'?',address:''},exact:true,verified:false},
+    {name:'BONER',symbol:'BONER',chain:'Solana',address:'Cm8G3wxvH6YPxNRvx4f3PkHJdCnwvLhBjhoKTa2ypump',pairAddress:'',baseToken:{name:'BONER',symbol:'BONER',address:'Cm8G3wxvH6YPxNRvx4f3PkHJdCnwvLhBjhoKTa2ypump'},quoteToken:{name:'Unknown quote',symbol:'?',address:''},exact:true,verified:false}
+  ];
+  const chains = [
+    ['Ethereum','0x2262…A4C1','#627eea'], ['Stellar','GBQF…TK2S','#111111'],
+    ['Polygon','0x418D…90B2','#8247e5'], ['Arbitrum','0x91C8…EE09','#28a0f0'],
+    ['Base','0x5A20…72D4','#1469e8'], ['Avalanche','0xC11D…61A8','#e84142']
+  ];
+  const cryptoAssets = [
+    { query:'BONER', label:'BONER' }, { query:'bitcoin', label:'BTC' }, { query:'ethereum', label:'ETH' },
+    { query:'solana', label:'SOL' }, { query:'dogecoin', label:'DOGE' }, { query:'chainlink', label:'LINK' }
+  ];
+  const stockQueries = ['C','NVDA','AAPL','MSFT','TSLA','AMZN','META'];
+  let current = 0;
+  let unlocked = 0;
+  let stockSearchTimer;
+  let cryptoSearchTimer;
+
+  function renderContracts() {
+    renderCryptoResults({provider:'Fallback',total:100,results:contracts});
+  }
+  function renderChains() {
+    document.querySelector('#chainGrid').innerHTML = chains.map((item, i) => `<button class="chain${i === 0 ? ' selected' : ''}" data-chain="${i}" style="--chain:${item[2]}"><span><i></i>${item[0]}</span><code>${item[1]}</code></button>`).join('');
+  }
+  function shortAddress(value) {
+    const address = String(value || '');
+    return address.length > 15 ? `${address.slice(0,7)}…${address.slice(-5)}` : address;
+  }
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
+  }
+  function companyLabel(value) {
+    const name = String(value || 'Listed company');
+    return name === name.toUpperCase() ? name.toLowerCase().replace(/\b\w/g, letter => letter.toUpperCase()) : name;
+  }
+  async function lookupAsset(assetType, query) {
+    const response = await fetch(`/api/lookup?type=${encodeURIComponent(assetType)}&q=${encodeURIComponent(query)}`, { headers:{ Accept:'application/json' } });
+    const payload = await response.json().catch(() => ({ error:'invalid_response', message:'Provider returned an invalid response.' }));
+    if (!response.ok) throw Object.assign(new Error(payload.message || 'Lookup failed'), { status:response.status, payload });
+    return payload;
+  }
+  async function searchCatalog(assetType, query) {
+    const response = await fetch(`/api/search?type=${encodeURIComponent(assetType)}&q=${encodeURIComponent(query)}`, { headers:{ Accept:'application/json' } });
+    const payload = await response.json().catch(() => ({ error:'invalid_response', message:'Provider returned an invalid response.' }));
+    if (!response.ok) throw Object.assign(new Error(payload.message || 'Search failed'), { status:response.status, payload });
+    return payload;
+  }
+  window.lookupAsset = lookupAsset;
+  window.searchCatalog = searchCatalog;
+  function renderMatchDropdown({results, query, kind, listSelector, countSelector, identitySelector}) {
+    const items = Array.isArray(results) ? results : [];
+    const exact = items.filter(item => item.exact === true);
+    const list = document.querySelector(listSelector);
+    const count = document.querySelector(countSelector);
+    count.textContent = exact.length ? `${exact.length} exact match${exact.length === 1 ? '' : 'es'}` : `${items.length} suggestions`;
+    list.className = `stock-dropdown${exact.length === 1 ? ' unique' : exact.length > 1 ? ' ambiguous' : ''}`;
+    const identity = document.querySelector(identitySelector);
+    const isStock = kind === 'stock';
+    if (!items.length) {
+      list.innerHTML = `<div class="empty-catalog">No ${isStock ? 'listed ticker' : 'token contract'} found.</div>`;
+      identity.innerHTML = `<span>${escapeHtml(query || 'Unknown')}</span><b>→ No result</b>`;
+      return;
+    }
+    list.innerHTML = items.map((item, index) => {
+      if (isStock) {
+        return `<button class="stock-match${item.exact ? ' exact' : ''}" data-match-index="${index}"><span class="stock-mark">${escapeHtml(item.symbol[0])}</span><span class="stock-copy"><strong>${escapeHtml(companyLabel(item.name))}</strong><small>${escapeHtml(item.symbol)} · ${escapeHtml(item.exchange)}</small></span></button>`;
+      }
+      const base = item.baseToken || {name:item.name,symbol:item.symbol,address:item.address};
+      const quote = item.quoteToken || {name:'Unknown quote',symbol:'?',address:''};
+      const addresses = `${item.chain || 'Unknown chain'} · B ${shortAddress(base.address) || '—'} · Q ${shortAddress(quote.address) || '—'} · P ${shortAddress(item.pairAddress) || '—'}`;
+      return `<button class="stock-match crypto-match${item.exact ? ' exact' : ''}" data-match-index="${index}"><span class="stock-mark">${escapeHtml(base.symbol?.[0] || '?')}</span><span class="stock-copy crypto-copy"><span class="pair-symbols"><strong>${escapeHtml(base.symbol || item.symbol)}</strong><span>/ ${escapeHtml(quote.symbol || '?')}</span></span><small class="pair-names">${escapeHtml(base.name || item.name)} + ${escapeHtml(quote.name || 'Unknown quote')}</small><small class="pair-addresses">${escapeHtml(addresses)}</small></span></button>`;
+    }).join('');
+    list._results = items;
+    list._exactCount = exact.length;
+    if (exact.length === 1) {
+      identity.innerHTML = `<span>${escapeHtml(query)}</span><b>✓ resolves to ${escapeHtml(isStock ? companyLabel(exact[0].name) : exact[0].name)}</b>`;
+    } else if (exact.length > 1) {
+      identity.innerHTML = `<span>${escapeHtml(query)}</span><b>× ${exact.length} exact ${isStock ? 'listings' : 'contracts'}</b>`;
+    } else {
+      identity.innerHTML = `<span>${escapeHtml(query)}</span><b>→ ${items.length} related result${items.length === 1 ? '' : 's'}</b>`;
+    }
+    list.animate([{opacity:.2,transform:'translateY(-6px)'},{opacity:1,transform:'none'}],{duration:360,easing:'cubic-bezier(.16,1,.3,1)'});
+  }
+  function renderStockMatches(payload) {
+    renderMatchDropdown({results:payload?.results,query:document.querySelector('#nvdaInput').value.trim(),kind:'stock',listSelector:'#stockMatches',countSelector:'#stockMatchCount',identitySelector:'#stockIdentity'});
+  }
+  function renderStockProviderError() {
+    document.querySelector('#stockMatchCount').textContent = 'SEC unavailable';
+    const list = document.querySelector('#stockMatches');
+    list.className = 'stock-dropdown';
+    list.innerHTML = '<div class="empty-catalog provider-error">Live SEC results could not be loaded. Try again.</div>';
+    document.querySelector('#stockIdentity').innerHTML = '<span>SEC</span><b>Provider unavailable</b>';
+  }
+  function renderStockLoading() {
+    document.querySelector('#stockMatchCount').textContent = 'Searching SEC…';
+    const list = document.querySelector('#stockMatches');
+    list.className = 'stock-dropdown loading';
+    list.innerHTML = '<div class="empty-catalog">Loading live listings…</div>';
+    document.querySelector('#stockIdentity').innerHTML = '<span>SEC</span><b>Live source</b>';
+  }
+  async function searchStock() {
+    const input = document.querySelector('#nvdaInput');
+    const query = input.value.trim();
+    if (!query) return renderStockMatches({results:[]});
+    const list = document.querySelector('#stockMatches');
+    list.classList.add('loading');
+    try {
+      renderStockMatches(await searchCatalog('stock', query));
+    } catch (error) {
+      if (error.status === 404) renderStockMatches({results:[]});
+      else renderStockProviderError();
+    } finally {
+      list.classList.remove('loading');
+    }
+  }
+  function renderCryptoResults(payload) {
+    renderMatchDropdown({results:payload?.results,query:document.querySelector('#bonerInput').value.trim(),kind:'crypto',listSelector:'#contractList',countSelector:'#cryptoMatchCount',identitySelector:'#cryptoIdentity'});
+    document.querySelectorAll('#cryptoPicks button').forEach(button => button.classList.toggle('active', button.dataset.query.toUpperCase() === document.querySelector('#bonerInput').value.trim().toUpperCase()));
+  }
+  async function searchCrypto() {
+    const input = document.querySelector('#bonerInput');
+    const query = input.value.trim();
+    if (!query) return renderCryptoResults({provider:'None',results:[]});
+    try {
+      renderCryptoResults(await searchCatalog('crypto', query));
+    } catch (error) {
+      if (query.toUpperCase() === 'BONER') renderContracts();
+      else renderCryptoResults({provider:'Offline',results:[]});
+    }
+  }
+  function selectMatch(event, listSelector, inputSelector, search) {
+    const button = event.target.closest('[data-match-index]');
+    if (!button) return;
+    const list = document.querySelector(listSelector);
+    const item = list._results?.[Number(button.dataset.matchIndex)];
+    if (!item) return;
+    document.querySelector(inputSelector).value = item.symbol;
+    search();
+  }
+  function show(index) {
+    if (index < 0 || index >= scenes.length || index > unlocked) return;
+    current = index;
+    scenes.forEach((scene, i) => scene.classList.toggle('active', i === current));
+    dots.forEach((dot, i) => { dot.classList.toggle('active', i === current); dot.disabled = i > unlocked; });
+    document.querySelector('#counter').textContent = `${current + 1} of ${scenes.length}`;
+    document.querySelector('#backButton').disabled = current === 0;
+    document.querySelector('#nextButton').disabled = current === scenes.length - 1;
+    scenes[current].scrollTop = 0;
+  }
+  function next() { if (current < scenes.length - 1) { unlocked = Math.max(unlocked, current + 1); show(current + 1); } }
+
+  document.querySelector('#nextButton').addEventListener('click', next);
+  document.querySelector('#backButton').addEventListener('click', () => show(current - 1));
+  dots.forEach((dot, i) => dot.addEventListener('click', () => show(i)));
+  document.addEventListener('keydown', event => {
+    if (['INPUT', 'BUTTON'].includes(document.activeElement.tagName)) return;
+    if (event.key === 'ArrowRight') next();
+    if (event.key === 'ArrowLeft') show(current - 1);
+  });
+  document.querySelector('#nvdaSearch').addEventListener('click', searchStock);
+  document.querySelector('#nvdaInput').addEventListener('keydown', event => { if (event.key === 'Enter') searchStock(); });
+  document.querySelector('#nvdaInput').addEventListener('input', () => { clearTimeout(stockSearchTimer); stockSearchTimer = setTimeout(searchStock, 260); });
+  document.querySelector('#quickPicks').addEventListener('click', event => { const button = event.target.closest('button'); if (!button) return; document.querySelector('#nvdaInput').value = button.dataset.ticker; searchStock(); });
+  document.querySelector('#stockMatches').addEventListener('click', event => selectMatch(event, '#stockMatches', '#nvdaInput', searchStock));
+  document.querySelector('#bonerSearch').addEventListener('click', searchCrypto);
+  document.querySelector('#bonerInput').addEventListener('keydown', event => { if (event.key === 'Enter') searchCrypto(); });
+  document.querySelector('#bonerInput').addEventListener('input', () => { clearTimeout(cryptoSearchTimer); cryptoSearchTimer = setTimeout(searchCrypto, 300); });
+  document.querySelector('#cryptoPicks').addEventListener('click', event => { const button = event.target.closest('button'); if (!button) return; document.querySelector('#bonerInput').value = button.dataset.query; searchCrypto(); });
+  document.querySelector('#contractList').addEventListener('click', event => selectMatch(event, '#contractList', '#bonerInput', searchCrypto));
+  document.querySelector('#ensSearch').addEventListener('click', () => document.querySelector('#resolution').animate([{opacity:.2,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:500,easing:'cubic-bezier(.16,1,.3,1)'}));
+  document.querySelector('#chainGrid').addEventListener('click', event => {
+    const button = event.target.closest('.chain'); if (!button) return;
+    document.querySelectorAll('.chain').forEach(item => item.classList.remove('selected')); button.classList.add('selected');
+    const chain = chains[Number(button.dataset.chain)];
+    document.querySelector('#receiptChain').textContent = chain[0]; document.querySelector('#receiptContract').textContent = chain[1];
+  });
+  document.querySelector('#amountInput').addEventListener('input', event => {
+    const amount = Math.max(0, Number(event.target.value) || 0); document.querySelector('#receiveAmount').textContent = `${(amount * .99501).toFixed(2)} BENJI`;
+  });
+  document.querySelector('#buyButton').addEventListener('click', () => {
+    document.querySelector('#successAmount').textContent = document.querySelector('#receiveAmount').textContent;
+    document.querySelector('#successChain').textContent = document.querySelector('#receiptChain').textContent;
+    document.querySelector('#successContract').textContent = document.querySelector('#receiptContract').textContent;
+    document.querySelector('#checkout').classList.add('hide');
+    document.querySelector('#success').classList.add('show');
+  });
+  document.querySelector('#continueButton').addEventListener('click', () => { unlocked = Math.max(unlocked, 4); show(4); });
+  document.querySelector('#quickPicks').innerHTML = stockQueries.map(ticker => `<button data-ticker="${ticker}">${ticker}</button>`).join('');
+  document.querySelector('#cryptoPicks').innerHTML = cryptoAssets.map(asset => `<button data-query="${asset.query}">${asset.label}</button>`).join('');
+  renderStockLoading(); renderContracts(); renderChains(); show(0); searchStock(); searchCrypto();
+})();
+</script>
+</body>
+</html>
