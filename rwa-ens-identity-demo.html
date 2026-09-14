@@ -196,6 +196,29 @@
   .comparison-card.trusted li { color: white; }
   .comparison-card.trusted li::before { content: "✓"; color: white; }
 
+  .metadata-body { padding: 24px; }
+  .metadata-group + .metadata-group { margin-top: 22px; }
+  .metadata-group h2 { margin: 0 0 9px; font: 650 20px/1.2 var(--display); letter-spacing: -.025em; }
+  .metadata-rows { margin: 0; }
+  .metadata-row { padding: 10px 0; display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; border-bottom: 1px solid var(--line); font-size: 15px; line-height: 1.35; }
+  .metadata-row dt { color: var(--muted); }
+  .metadata-row dd { margin: 0; text-align: right; font-weight: 650; }
+  .text-records code { font: 14px/1.4 var(--mono); overflow-wrap: anywhere; }
+  .record-market { margin-top: 22px; }
+  .metadata-proof { margin-top: 16px; padding: 16px; border-radius: 16px; background: var(--blue-soft); color: var(--blue); font-size: 14px; line-height: 1.4; }
+  .metadata-proof summary { cursor: pointer; font-weight: 700; }
+  .metadata-proof p { margin: 10px 0 0; color: #515154; }
+
+  .dns-connect { padding: 16px 4px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--blue); font-size: 15px; font-weight: 650; }
+  .dns-connect small { color: var(--muted); font-size: 13px; font-weight: 450; }
+  .dns-step-copy { margin: 8px 0 0; color: #515154; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+  .dns-options { margin-top: 18px; }
+  .dns-options .comparison-card { background: var(--blue-soft); border: 1px solid rgba(20,105,232,.16); }
+  .dns-options h2 { margin: 0; font: 650 23px/1.1 var(--display); letter-spacing: -.035em; }
+  .dns-options p { margin: 12px 0 0; color: #515154; font-size: 15px; line-height: 1.4; }
+  .dns-note { margin: 18px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+  .dns-note a { color: var(--blue); text-underline-offset: 3px; }
+
   .checkout { padding: clamp(28px, 4vw, 48px); }
   .asset-row { display: flex; align-items: center; gap: 15px; }
   .asset-icon { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 17px; color: white; background: linear-gradient(145deg, #4f91f2, #1469e8); font-weight: 750; }
@@ -298,6 +321,8 @@
     <button class="dot" data-step="5" aria-label="Step 6" disabled></button>
     <button class="dot" data-step="6" aria-label="Step 7" disabled></button>
     <button class="dot" data-step="7" aria-label="Step 8" disabled></button>
+    <button class="dot" data-step="8" aria-label="Step 9" disabled></button>
+    <button class="dot" data-step="9" aria-label="Step 10" disabled></button>
   </nav>
   <span class="live-label">Concept demo · illustrative data</span>
 </header>
@@ -342,7 +367,7 @@
       <div class="visual device resolver">
         <div class="device-bar"><span>ENS asset profile</span></div>
         <div class="device-body">
-          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="ensInput" value="benji.assets.franklintempleton.eth" aria-label="Search ENS name"><button id="ensSearch">Resolve</button></div>
+          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="ensInput" value="aaplon.assets.ondo.finance" aria-label="Search ENS name"><button id="ensSearch">Resolve</button></div>
           <div id="resolution"><div class="chain-head"><strong>6 deployments</strong></div><div class="chain-grid" id="chainGrid"></div>
           <div class="attestation-summary" aria-label="Attestation valid"><span class="verified-badge" aria-hidden="true">✓</span><div class="attestation-summary-copy"><strong>Attestation valid*</strong><a href="https://easscan.org/" target="_blank" rel="noopener noreferrer" aria-label="View attestation proof on EASscan, opens in a new tab">View proof ↗</a></div></div></div>
         </div>
@@ -350,21 +375,45 @@
     </div>
   </section>
 
-  <section class="scene" data-scene="3" aria-labelledby="title-3">
+  <section class="scene namespace-scene" data-scene="3" aria-labelledby="title-3">
     <div class="stage">
-      <div class="copy"><div class="eyebrow">04 · Buying with ENS</div><h1 id="title-3">Same name.<br><span class="blue">Buy anywhere.</span></h1><p class="sub">Use the same verified asset name wherever ENS is integrated.</p></div>
+      <div class="copy"><div class="eyebrow">04 · Read the records</div><h1 id="title-3">One name.<br><span class="blue">More context.</span></h1><p class="sub">Text records on the ENS name link the asset to its issuer, market terms, and legal identity proofs.</p></div>
+      <div class="visual device">
+        <div class="device-bar"><span>ENS text records</span></div>
+        <div class="metadata-body">
+          <div class="tree-level"><span>Asset ENS name</span><code>aaplon.assets.ondo.finance</code></div>
+          <div class="dns-connect"><span aria-hidden="true">↓</span> Read text records</div>
+          <div class="metadata-group"><h2>Issuer &amp; legal identity</h2><dl class="metadata-rows text-records">
+            <div class="metadata-row"><dt><code>issuer</code></dt><dd>Ondo Global Markets</dd></div>
+            <div class="metadata-row"><dt><code>issuer.lei</code></dt><dd>Issuer’s LEI*</dd></div>
+          </dl></div>
+          <details class="metadata-proof"><summary><code>issuer.lei.proof</code> · GLEIF proof preview*</summary><p>This text record links to supporting evidence from our GLEIF integration. Check the issuer’s LEI, legal entity name, and jurisdiction against the asset’s issuer records.</p><p>Illustrative only. No live LEI or proof is attached. An LEI identifies a legal entity; it does not certify the asset or regulatory approval.</p></details>
+          <div class="metadata-group record-market"><h2>Primary market &amp; terms</h2><dl class="metadata-rows text-records">
+            <div class="metadata-row"><dt><code>market.eligibility</code></dt><dd>Non-U.S. investors</dd></div>
+            <div class="metadata-row"><dt><code>market.subscriptionAsset</code></dt><dd>USDC</dd></div>
+            <div class="metadata-row"><dt><code>legal.terms</code></dt><dd>Link to issuer terms*</dd></div>
+          </dl></div>
+          <p class="dns-note">*Proposed text-record schema and illustrative values, not live records.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" data-scene="4" aria-labelledby="title-4">
+    <div class="stage">
+      <div class="copy"><div class="eyebrow">05 · Buying with ENS</div><h1 id="title-4">Same name.<br><span class="blue">Buy anywhere.</span></h1><p class="sub">Use the same verified asset name wherever ENS is integrated.</p></div>
       <div class="visual device">
         <div class="device-bar"><span>Buy with ENS</span></div>
         <div class="checkout" id="checkout">
-          <div class="asset-row"><div class="asset-icon">B</div><div><strong>BENJI</strong><span>benji.assets.franklintempleton.eth</span></div></div>
+          <div class="asset-row"><div class="asset-icon">A</div><div><strong>AAPLon</strong><span>aaplon.assets.ondo.finance</span></div></div>
           <div class="verification-card" aria-label="Attestation verification"><div class="verification-seal">✓</div><div class="verification-copy"><small>Third-party verification</small><strong>Issuer + custodian attested</strong><span>Valid through 31 Dec 2026*</span></div><a href="https://easscan.org/" target="_blank" rel="noopener noreferrer" aria-label="Verify attestation on EASscan, opens in a new tab">Verify on EASscan ↗</a></div>
           <div class="order-amount"><input id="amountInput" type="number" value="1000" min="10" step="10" aria-label="Purchase amount"><b>USDC</b></div>
-          <div class="order-details"><div><span>Network</span><b id="receiptChain">Ethereum</b></div><div><span>Contract</span><b id="receiptContract">0x2262…A4C1</b></div><div><span>You receive</span><b id="receiveAmount">995.01 BENJI</b></div></div>
+          <div class="order-details"><div><span>Network</span><b id="receiptChain">Ethereum</b></div><div><span>Contract</span><b id="receiptContract">0x2262…A4C1</b></div><div><span>You receive</span><b id="receiveAmount">995.01 AAPLon</b></div></div>
           <button class="buy" id="buyButton">Simulate purchase</button><p class="fine">Demo only. No wallet connected. No funds moved.</p>
         </div>
         <div class="success" id="success">
           <div class="success-receipt">
-            <div class="check">✓</div><div class="success-kicker">Purchase simulated</div><h2 id="successAmount">995.01 BENJI</h2><p class="success-name">benji.assets.franklintempleton.eth</p>
+            <div class="check">✓</div><div class="success-kicker">Purchase simulated</div><h2 id="successAmount">995.01 AAPLon</h2><p class="success-name">aaplon.assets.ondo.finance</p>
             <div class="success-route"><div><span>Network</span><b id="successChain">Ethereum</b></div><div><span>Contract</span><b id="successContract">0x2262…A4C1</b></div></div>
             <ul class="success-checks"><li>Asset identity matched</li><li>Issuer attestation valid</li><li>Correct chain contract selected</li></ul>
             <button class="buy" id="continueButton">Continue</button><p class="fine">Demo only. No funds moved.</p>
@@ -374,59 +423,76 @@
     </div>
   </section>
 
-  <section class="scene namespace-scene" data-scene="4" aria-labelledby="title-4">
-    <div class="stage">
-      <div class="copy"><div class="eyebrow">05 · What is a namespace?</div><h1 class="namespace-heading" id="title-4">Names organized<br><span class="blue">under one trusted root.</span></h1><p class="sub">A namespace gives every participant and asset a unique, predictable place under <strong>franklintempleton.eth</strong>.</p></div>
-      <div class="visual namespace-tree">
-        <div class="tree-level"><span>Organization</span><code>franklintempleton.eth</code></div>
-        <div class="tree-arrow" aria-hidden="true"></div>
-        <div class="tree-level"><span>Category</span><code>assets.franklintempleton.eth</code></div>
-        <div class="tree-arrow" aria-hidden="true"></div>
-        <div class="tree-level"><span>Asset</span><code>benji.assets.franklintempleton.eth</code></div>
-        <div class="tree-note">Names become more specific as you move left.</div>
-      </div>
-    </div>
-  </section>
-
   <section class="scene namespace-scene" data-scene="5" aria-labelledby="title-5">
     <div class="stage">
-      <div class="copy"><div class="eyebrow">06 · Namespace design</div><h1 class="namespace-heading" id="title-5">A good namespace<br><span class="blue">works like a clear menu.</span></h1><p class="sub">Each level narrows the choice: assets → BENJI → policies → redemption. New facets can be added without changing the asset’s identity.</p></div>
-      <div class="visual namespace-menu" aria-label="Recursive namespace menu">
-        <div class="menu-step"><div class="menu-label">01</div><div class="menu-copy"><strong>Assets</strong><span>Category</span><code>assets.franklintempleton.eth</code></div></div>
-        <div class="menu-step"><div class="menu-label">02</div><div class="menu-copy"><strong>BENJI</strong><span>Asset identity</span><code>benji.assets.franklintempleton.eth</code></div></div>
-        <div class="menu-step"><div class="menu-label">03</div><div class="menu-copy"><strong>Policies</strong><span>Facet</span><code>policies.benji.assets.franklintempleton.eth</code></div></div>
-        <div class="menu-step"><div class="menu-label">04</div><div class="menu-copy"><strong>Redemption</strong><span>Policy</span><code>redemption.policies.benji.assets.franklintempleton.eth</code></div></div>
+      <div class="copy"><div class="eyebrow">06 · What is a namespace?</div><h1 class="namespace-heading" id="title-5">Names organized<br><span class="blue">under one trusted root.</span></h1><p class="sub">A namespace gives every participant and asset a unique, predictable place under <strong>ondo.finance</strong>.</p></div>
+      <div class="visual namespace-tree">
+        <div class="tree-level"><span>Organization</span><code>ondo.finance</code></div>
+        <div class="tree-arrow" aria-hidden="true"></div>
+        <div class="tree-level"><span>Category</span><code>assets.ondo.finance</code></div>
+        <div class="tree-arrow" aria-hidden="true"></div>
+        <div class="tree-level"><span>Asset</span><code>aaplon.assets.ondo.finance</code></div>
+        <div class="tree-note">Names become more specific as you move left.</div>
       </div>
     </div>
   </section>
 
   <section class="scene namespace-scene" data-scene="6" aria-labelledby="title-6">
     <div class="stage">
-      <div class="copy"><div class="eyebrow">07 · Connected by names</div><h1 class="namespace-heading" id="title-6">A connected namespace<br><span class="blue">works like a map.</span></h1><p class="sub">While a name identifies an entity, asset, or account, records explain how they are related.</p></div>
-      <div class="visual namespace-flow">
-        <div class="namespace-node" style="--node:#1d1d1f"><div class="namespace-icon">E</div><div class="namespace-copy"><span class="namespace-type">Entities</span><strong>FT Digital Assets</strong><code>ft-digital-assets.entities.franklintempleton.eth</code></div></div>
-        <div class="namespace-relation"><span>issues</span></div>
-        <div class="namespace-node" style="--node:#1469e8"><div class="namespace-icon">A</div><div class="namespace-copy"><span class="namespace-type">Assets</span><strong>BENJI</strong><code>benji.assets.franklintempleton.eth</code></div></div>
-        <div class="namespace-relation"><span>held by</span></div>
-        <div class="namespace-node account-node" style="--node:#24a148"><div class="namespace-icon">U</div><div class="namespace-copy"><span class="namespace-type">Accounts</span><strong>Alice's account</strong><code>alice.accounts.franklintempleton.eth</code><div class="stealth-visual"><div class="stealth-addresses" aria-hidden="true"><i></i><i></i><i></i></div><div class="stealth-copy"><strong>Stealth addresses</strong><span>Fresh address every transfer</span></div></div></div></div>
+      <div class="copy"><div class="eyebrow">07 · Namespace design</div><h1 class="namespace-heading" id="title-6">A good namespace<br><span class="blue">works like a clear menu.</span></h1><p class="sub">Each level narrows the choice: assets → AAPLon → policies → redemption. New facets can be added without changing the asset’s identity.</p></div>
+      <div class="visual namespace-menu" aria-label="Recursive namespace menu">
+        <div class="menu-step"><div class="menu-label">01</div><div class="menu-copy"><strong>Assets</strong><span>Category</span><code>assets.ondo.finance</code></div></div>
+        <div class="menu-step"><div class="menu-label">02</div><div class="menu-copy"><strong>AAPLon</strong><span>Asset identity</span><code>aaplon.assets.ondo.finance</code></div></div>
+        <div class="menu-step"><div class="menu-label">03</div><div class="menu-copy"><strong>Policies</strong><span>Facet</span><code>policies.aaplon.assets.ondo.finance</code></div></div>
+        <div class="menu-step"><div class="menu-label">04</div><div class="menu-copy"><strong>Redemption</strong><span>Policy</span><code>redemption.policies.aaplon.assets.ondo.finance</code></div></div>
       </div>
     </div>
   </section>
 
   <section class="scene namespace-scene" data-scene="7" aria-labelledby="title-7">
     <div class="stage">
-      <div class="copy"><div class="eyebrow">08 · Why it matters</div><h1 class="namespace-heading" id="title-7">A shared namespace<br><span class="blue">makes every interaction safer.</span></h1><p class="sub">Find the right entity, asset, account, or policy. Verify the relationship. Then act.</p></div>
+      <div class="copy"><div class="eyebrow">08 · Connected by names</div><h1 class="namespace-heading" id="title-7">A connected namespace<br><span class="blue">works like a map.</span></h1><p class="sub">While a name identifies an entity, asset, or account, records explain how they are related.</p></div>
+      <div class="visual namespace-flow">
+        <div class="namespace-node" style="--node:#1d1d1f"><div class="namespace-icon">E</div><div class="namespace-copy"><span class="namespace-type">Entities</span><strong>Ondo Global Markets</strong><code>global-markets.entities.ondo.finance</code></div></div>
+        <div class="namespace-relation"><span>issues</span></div>
+        <div class="namespace-node" style="--node:#1469e8"><div class="namespace-icon">A</div><div class="namespace-copy"><span class="namespace-type">Assets</span><strong>AAPLon</strong><code>aaplon.assets.ondo.finance</code></div></div>
+        <div class="namespace-relation"><span>held by</span></div>
+        <div class="namespace-node account-node" style="--node:#24a148"><div class="namespace-icon">U</div><div class="namespace-copy"><span class="namespace-type">Accounts</span><strong>Alice's account</strong><code>alice.accounts.ondo.finance</code><div class="stealth-visual"><div class="stealth-addresses" aria-hidden="true"><i></i><i></i><i></i></div><div class="stealth-copy"><strong>Stealth addresses</strong><span>Fresh address every transfer</span></div></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene namespace-scene" data-scene="8" aria-labelledby="title-8">
+    <div class="stage">
+      <div class="copy"><div class="eyebrow">09 · Why it matters</div><h1 class="namespace-heading" id="title-8">A shared namespace<br><span class="blue">makes every interaction safer.</span></h1><p class="sub">Find the right entity, asset, account, or policy. Verify the relationship. Then act.</p></div>
       <div class="visual safety-comparison">
         <div class="comparison-grid">
           <div class="comparison-card"><span class="comparison-label">Without a namespace</span><code>0x2262…A4C1</code><ul><li>Which chain?</li><li>Who controls it?</li><li>Is it still valid?</li></ul></div>
-          <div class="comparison-card trusted"><span class="comparison-label">With a namespace</span><code>benji.assets.<wbr>franklintempleton.eth</code><ul><li>Contracts by chain</li><li>Issuer-controlled name</li><li>Verifiable attestations</li></ul></div>
+          <div class="comparison-card trusted"><span class="comparison-label">With a namespace</span><code>aaplon.assets.<wbr>ondo.finance</code><ul><li>Contracts by chain</li><li>Issuer-controlled name</li><li>Verifiable attestations</li></ul></div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene namespace-scene" data-scene="9" aria-labelledby="title-9">
+    <div class="stage">
+      <div class="copy"><div class="eyebrow">10 · Bring your own domain</div><h1 class="namespace-heading" id="title-9">Your web domain<br><span class="blue">= your ENS name.</span></h1><p class="sub">A DNS domain you control can be your ENS name, even if someone else owns the matching .eth.</p></div>
+      <div class="visual namespace-tree">
+        <div class="tree-level"><span>Your web domain</span><code>ondo.finance</code></div>
+        <div class="dns-connect"><span aria-hidden="true">↓</span> Connect to ENS <small>Verify DNS control with DNSSEC</small></div>
+        <div class="tree-level"><span>Your ENS name</span><code>ondo.finance</code></div>
+        <p class="dns-step-copy">Create subnames with either registry option:</p>
+        <div class="comparison-grid dns-options" aria-label="Two subname registry options">
+          <div class="comparison-card"><span class="comparison-label">Option 01 · Onchain</span><h2>Subname registry</h2><p>Create and manage subnames in smart contracts.</p></div>
+          <div class="comparison-card"><span class="comparison-label">Option 02 · Offchain</span><h2>CCIP registry</h2><p>Manage subnames offchain. Resolve them with CCIP Read.</p></div>
+        </div>
+        <p class="dns-note">No matching .eth required. Example names are illustrative.<br><a href="https://docs.ens.domains/ensip/17/" target="_blank" rel="noopener noreferrer">DNS integration ↗</a> · <a href="https://docs.ens.domains/web/subdomains/" target="_blank" rel="noopener noreferrer">Subname options ↗</a></p>
       </div>
     </div>
   </section>
 </main>
 
-<footer class="controls"><div class="control-pill"><button class="nav" id="backButton" aria-label="Previous step" disabled>‹</button><span class="counter" id="counter">1 of 8</span><button class="nav" id="nextButton" aria-label="Next step">›</button></div><span class="hint">Use ← → keys</span></footer>
+<footer class="controls"><div class="control-pill"><button class="nav" id="backButton" aria-label="Previous step" disabled>‹</button><span class="counter" id="counter">1 of 10</span><button class="nav" id="nextButton" aria-label="Next step">›</button></div><span class="hint">Use ← → keys</span></footer>
 
 <script>
 (() => {
@@ -613,7 +679,7 @@
     document.querySelector('#receiptChain').textContent = chain[0]; document.querySelector('#receiptContract').textContent = chain[1];
   });
   document.querySelector('#amountInput').addEventListener('input', event => {
-    const amount = Math.max(0, Number(event.target.value) || 0); document.querySelector('#receiveAmount').textContent = `${(amount * .99501).toFixed(2)} BENJI`;
+    const amount = Math.max(0, Number(event.target.value) || 0); document.querySelector('#receiveAmount').textContent = `${(amount * .99501).toFixed(2)} AAPLon`;
   });
   document.querySelector('#buyButton').addEventListener('click', () => {
     document.querySelector('#successAmount').textContent = document.querySelector('#receiveAmount').textContent;
@@ -622,7 +688,7 @@
     document.querySelector('#checkout').classList.add('hide');
     document.querySelector('#success').classList.add('show');
   });
-  document.querySelector('#continueButton').addEventListener('click', () => { unlocked = Math.max(unlocked, 4); show(4); });
+  document.querySelector('#continueButton').addEventListener('click', () => { unlocked = Math.max(unlocked, 5); show(5); });
   document.querySelector('#quickPicks').innerHTML = stockQueries.map(ticker => `<button data-ticker="${ticker}">${ticker}</button>`).join('');
   document.querySelector('#cryptoPicks').innerHTML = cryptoAssets.map(asset => `<button data-query="${asset.query}">${asset.label}</button>`).join('');
   renderStockLoading(); renderCryptoResults({results:[]}); renderChains(); show(0); searchStock(); searchCrypto();
