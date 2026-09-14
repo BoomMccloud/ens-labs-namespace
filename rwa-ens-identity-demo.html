@@ -326,7 +326,7 @@
       <div class="visual device dark-device">
         <div class="device-bar"><span>All tokens</span><span>All chains</span></div>
         <div class="device-body">
-          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="bonerInput" value="BONER" aria-label="Search tokens" autocomplete="off"><button id="bonerSearch">Search</button></div>
+          <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="bonerInput" value="DOGE" aria-label="Search tokens" autocomplete="off"><button id="bonerSearch">Search</button></div>
           <div class="quick-picks" id="cryptoPicks" aria-label="Popular crypto assets"></div>
           <div class="catalog-head"><strong id="cryptoMatchCount">Searching…</strong><span>Contract discovery</span></div>
           <div class="stock-dropdown" id="contractList" aria-live="polite"></div>
@@ -445,8 +445,8 @@
     ['Base','0x5A20…72D4','#1469e8'], ['Avalanche','0xC11D…61A8','#e84142']
   ];
   const cryptoAssets = [
-    { query:'BONER', label:'BONER' }, { query:'bitcoin', label:'BTC' }, { query:'ethereum', label:'ETH' },
-    { query:'solana', label:'SOL' }, { query:'dogecoin', label:'DOGE' }, { query:'chainlink', label:'LINK' }
+    { query:'DOGE', label:'DOGE' }, { query:'bitcoin', label:'BTC' }, { query:'ethereum', label:'ETH' },
+    { query:'solana', label:'SOL' }, { query:'chainlink', label:'LINK' }
   ];
   const stockQueries = ['C','NVDA','AAPL','MSFT','TSLA','AMZN','META'];
   let current = 0;
@@ -625,7 +625,7 @@
   document.querySelector('#continueButton').addEventListener('click', () => { unlocked = Math.max(unlocked, 4); show(4); });
   document.querySelector('#quickPicks').innerHTML = stockQueries.map(ticker => `<button data-ticker="${ticker}">${ticker}</button>`).join('');
   document.querySelector('#cryptoPicks').innerHTML = cryptoAssets.map(asset => `<button data-query="${asset.query}">${asset.label}</button>`).join('');
-  renderStockLoading(); renderContracts(); renderChains(); show(0); searchStock(); searchCrypto();
+  renderStockLoading(); renderCryptoResults({results:[]}); renderChains(); show(0); searchStock(); searchCrypto();
 })();
 </script>
 </body>
